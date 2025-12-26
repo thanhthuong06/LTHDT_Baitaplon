@@ -1,0 +1,2 @@
+project_id,task_id,task_name,task_description,assignee_id,start_date,deadline,completed_date,priority,status_task
+P25_00001,TP25_00001_00001,Quản Lý Nhập Hàng,Nhập hàng vào kho,Unassigned,15/10/2025,15/12/2025,27/12/2025,Medium,Completed
