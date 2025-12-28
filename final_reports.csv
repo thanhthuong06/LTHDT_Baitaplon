@@ -1,2 +1,3 @@
 report_id,project_id,author_id,created_date,project_name,customer,project_start_date,actual_end_date,duration_days,total_tasks,completed_tasks,ontime_tasks,overdue_tasks,cancelled_tasks,overall_progress,project_status
 FRP25_00001,P25_00001,NV_00002,27/12/2025 03:00:21,Quản Lý Kho Hàng,Nguyễn Trung Hiếu,12/10/2025,27/12/2025,76,1,1,0,1,0,100.0,Hoàn thành
+FRP25_00002,P25_00002,NV_00002,28/12/2025 21:18:32,Quản Lý Sinh Viên,Nguyễn Văn Hiếu,12/02/2025,26/12/2025,317,0,0,0,0,0,0.0,Hoàn thành

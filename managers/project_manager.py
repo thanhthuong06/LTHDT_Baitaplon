@@ -45,6 +45,13 @@ class ProjectManager(ProjectItemManager):
             if not re.fullmatch(r"P\d{2}_\d{5}", pid):
                 print("Sai định dạng mã dự án (VD: P25_00001)")
                 continue
+            project = next(
+            (p for p in self.items if p.project_id == pid),
+            None
+            )
+            if not project:
+                print("Mã dự án không tồn tại trong hệ thống.")
+                continue
             return pid
 
     # ================= CRUD =================

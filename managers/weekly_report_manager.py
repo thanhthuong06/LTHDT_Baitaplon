@@ -221,9 +221,6 @@ class WeeklyReportManager:
             return
         self._display_table(data)
 
-    # ================= 4. TÌM KIẾM =================
-    import re  # Bắt buộc import
-
     # ================= 4. TÌM KIẾM (RÀNG BUỘC CHẶT) =================
     def search_report(self):
         print("\n--- TÌM KIẾM BÁO CÁO ---")

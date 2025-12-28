@@ -1,4 +1,3 @@
 project_id,project_name,customer,description,start_date,expected_end_date,actual_end_date,budget,status_project,pm_id
-P25_00001,Quản Lý Kho Hàng,Nguyễn Trung Hiếu,Quản lý xuất nhập hàng,2025-10-12,2026-01-12,2025-12-27,10000000.0,Hoàn thành,NV_00002
-P25_00002,Quản Lý Sinh Viên,Nguyễn Văn Hiếu,Quản lý sinh viên trong trường,2025-02-12,2025-12-30,2025-12-26,10000000.0,Hoàn thành,
+P25_00002,Quản Lý Sinh Viên,Nguyễn Văn Hiếu,Quản lý sinh viên trong trường,2025-02-12,2025-12-30,2025-12-26,10000000.0,Hoàn thành,NV_00002
 P25_00004,Quản Lý Nhân Viên,Khánh Phương,Quản lý nhân viên công ty,2025-11-22,2025-12-30,,5000000.0,Đang thực hiện,NV_00001

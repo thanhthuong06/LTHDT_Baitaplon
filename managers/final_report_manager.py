@@ -96,7 +96,7 @@ class FinalReportManager:
             print(f"Lỗi khi tạo báo cáo: {e}")
 
     # ======================================================
-    # VIEW DETAIL (CÓ REGEX)
+    # VIEW DETAIL 
     # ======================================================
     def view_report_detail(self, project_manager, staff_manager, task_manager):
         print("\n--- XEM BÁO CÁO TỔNG KẾT ---")

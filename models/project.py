@@ -22,8 +22,6 @@ class Project(ProjectItem):
         self.actual_end_date = None
         self.budget = 0.0
         self.status_project = ""
-        self.member_list = []  # KHÔNG LƯU CSV
-        self.task_list = []    # KHÔNG LƯU CSV
         self.pm_id = ""        # Mã Project Manager
 
     @staticmethod

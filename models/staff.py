@@ -15,8 +15,7 @@ CHUC_DANH_QUAN_LY = ["Team Leader", "Project Manager"]
 
 class Staff:
     """
-    Lớp Staff lưu thông tin cá nhân.
-    project_list và task_list chỉ dùng để hiển thị / lưu CSV
+    Lớp Staff lưu thông tin cá nhân
     """
 
     def __init__(

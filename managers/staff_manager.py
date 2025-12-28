@@ -90,51 +90,62 @@ class StaffManager:
         print("Thêm nhân viên thành công")
 
     def update_staff(self):
-        max_try = 3
-        count = 0
+             while True:
+                keyword = input("Nhập mã nhân viên cần cập nhật: ").strip().upper()
 
-        while count < max_try:
-            staff_id = input("Nhập mã nhân viên cần cập nhật: ").strip()
-            staff = self.find_by_id(staff_id)
+                # 1. Kiểm tra định dạng
+                if not re.fullmatch(r"NV_\d{5}", keyword):
+                    print("Mã nhân viên sai định dạng (VD: NV_00001)")
+                    continue
 
-            if staff:
+                # 2. Kiểm tra tồn tại
+                staff = self.find_by_id(keyword)
+                if not staff:
+                    print("Mã nhân viên không tồn tại, vui lòng nhập lại")
+                    continue
+
+                # 3. Hợp lệ → cập nhật
                 staff.update_info()
                 self.save_to_file()
                 print("Cập nhật nhân viên thành công")
                 return True
-            else:
-                count += 1
-                print(f"Không tìm thấy nhân viên ({count}/{max_try} lần)")
-
-        print("Bạn đã nhập sai mã nhân viên quá 3 lần. Thoát chức năng cập nhật.")
-        return False
-
-
     def delete_staff(self):
+        while True:
+            staff_id = input("Nhập mã nhân viên muốn xóa: ").strip().upper()
 
-            staff_id = input("Nhập mã nhân viên muốn xóa: ").strip()
+            # 1. Kiểm tra định dạng
+            if not re.fullmatch(r"NV_\d{5}", staff_id):
+                print("Mã nhân viên sai định dạng (VD: NV_00001)")
+                continue
+
+            # 2. Kiểm tra tồn tại
             staff = next((s for s in self.staff_list if s.staff_id == staff_id), None)
-            confirm = input(
-                f"Bạn chắc chắn muốn xóa nhân viên {staff_id} vĩnh viễn? (y/n): "
-            ).lower()
+            if not staff:
+                print("Nhân viên không tồn tại, vui lòng nhập lại")
+                continue
 
-            if confirm != 'y':
-                print("Đã hủy thao tác xóa.")
-                return  
-            
-            # 1. Xóa nhân viên khỏi danh sách
-            self.staff_list.remove(staff)
+            break  
+        # 3. Xác nhận xóa
+        confirm = input(
+            f"Bạn chắc chắn muốn xóa nhân viên {staff_id} vĩnh viễn? (y/n): "
+        ).strip().lower()
 
-            # 2. Cập nhật task (nếu có)
-            if self.task_manager:
-                self.task_manager.unassign_staff(staff_id)
-            else:
-                print("Cảnh báo: Chưa kết nối TaskManager.")
+        if confirm != "y":
+            print("Đã hủy thao tác xóa.")
+            return
 
-            # 3. Lưu file
-            self.save_to_file()
-            print(f"Đã xóa nhân viên {staff_id} thành công.")
-            return  
+        # 4. Gỡ nhân viên khỏi các task (chuyển sang Unassigned)
+        if self.task_manager:
+            self.task_manager.unassign_staff(staff_id)
+        else:
+            print("Cảnh báo: Chưa kết nối TaskManager.")
+
+        # 5. Xóa nhân viên khỏi danh sách
+        self.staff_list.remove(staff)
+
+        # 6. Lưu file
+        self.save_to_file()
+        print(f"Đã xóa nhân viên {staff_id} thành công.")
 
     # ==================================================
     # DISPLAY
@@ -156,55 +167,87 @@ class StaffManager:
     # ==================================================
     def search_staff(self):
         while True:
-            keyword = input(
-                "Nhập mã NV / họ tên / vai trò: "
-            ).strip()
+            print("\n--- TÌM KIẾM NHÂN VIÊN ---")
+            print("1. Tìm theo mã nhân viên")
+            print("2. Tìm theo họ tên")
+            print("3. Tìm theo vai trò")
+            print("0. Quay lại")
 
-            if not keyword:
-                print("Không được để trống từ khóa")
+            choice = input("Chọn cách tìm: ").strip()
+
+            # ================= QUAY LẠI =================
+            if choice == "0":
+                return
+
+            # ================= THEO MÃ NV =================
+            if choice == "1":
+                while True:
+                    keyword = input("Nhập mã nhân viên (NV_00001): ").strip().upper()
+
+                    if not re.fullmatch(r"NV_\d{5}", keyword):
+                        print("Mã nhân viên sai định dạng (VD: NV_00001)")
+                        continue
+
+                    result = [
+                        s for s in self.staff_list
+                        if s.staff_id.upper() == keyword
+                    ]
+                    break
+
+            # ================= THEO HỌ TÊN =================
+            elif choice == "2":
+                while True:
+                    keyword = input("Nhập họ tên nhân viên: ").strip()
+
+                    if not re.fullmatch(r"[A-Za-zÀ-ỹ\s]+", keyword):
+                        print("Họ tên không hợp lệ (không chứa số hoặc ký tự đặc biệt)")
+                        continue
+
+                    keyword_lower = keyword.lower()
+                    result = [
+                        s for s in self.staff_list
+                        if keyword_lower in s.full_name.lower()
+                    ]
+                    break
+
+            # ================= THEO VAI TRÒ =================
+            elif choice == "3":
+                print("Các vai trò hợp lệ:")
+                for vt in VAI_TRO_HOP_LE:
+                    print(f"- {vt}")
+
+                while True:
+                    keyword = input("Nhập vai trò: ").strip()
+
+                    if keyword not in VAI_TRO_HOP_LE:
+                        print("Vai trò không hợp lệ")
+                        continue
+
+                    result = [
+                        s for s in self.staff_list
+                        if s.role == keyword
+                    ]
+                    break
+
+            else:
+                print("Lựa chọn không hợp lệ")
                 continue
 
-            keyword_lower = keyword.lower()
-
-            # -------- CASE 1: MÃ NHÂN VIÊN --------
-            if keyword.upper().startswith("NV_"):
-                if not re.fullmatch(r"NV_\d{5}", keyword.upper()):
-                    print("Mã nhân viên sai định dạng (VD: NV_00001)")
-                    continue
-
-                result = [
-                    s for s in self.staff_list
-                    if s.staff_id.upper() == keyword.upper()
-                ]
-
-            # -------- CASE 2: VAI TRÒ --------
-            elif keyword in VAI_TRO_HOP_LE:
-                result = [
-                    s for s in self.staff_list
-                    if s.role == keyword
-                ]
-
-            # -------- CASE 3: HỌ TÊN --------
-            else:
-                if not re.fullmatch(r"[A-Za-zÀ-ỹ\s]+", keyword):
-                    print("Từ khóa tìm kiếm không hợp lệ")
-                    continue
-
-                result = [
-                    s for s in self.staff_list
-                    if keyword_lower in s.full_name.lower()
-                ]
-
+            # ================= KẾT QUẢ =================
             if not result:
                 print("Không tìm thấy nhân viên phù hợp")
-                continue
+                return
 
-            # --- HIỂN THỊ KẾT QUẢ ---
             print(f"\nKẾT QUẢ TÌM KIẾM ({len(result)} nhân viên):")
-            print(f"| {'Mã NV':<10} | {'Họ và tên':<15} | {'Tuổi':<3} | {'Cấp độ':<10} | {'Vai trò':<15} | {'Chức danh QL':<10} | {'Công việc':<25} |")
-            # 2. In từng dòng dữ liệu
+            print(
+                f"| {'Mã NV':<10} | {'Họ và tên':<20} | {'Tuổi':<3} | "
+                f"{'Cấp độ':<10} | {'Vai trò':<15} | {'Chức danh QL':<15} | {'Công việc được giao'}"
+            )
+            print("-" * 95)
+
             for s in result:
                 s.display_info()
+
             return
 
     # ==================================================
