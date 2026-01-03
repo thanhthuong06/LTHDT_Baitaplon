@@ -180,38 +180,31 @@ def main():
     # 1. Khởi tạo StaffManager
     staff_manager = StaffManager("staff.csv")
 
-    # 2. Khởi tạo TaskManager (TRUYỀN staff_manager VÀO)
-    # Lúc này TaskManager đã biết StaffManager là ai
-    task_manager = TaskManager(
-        filename="tasks.csv", 
-        staff_manager=staff_manager
-    )
-
-    # 3. Khởi tạo ProjectManager
+    # 2. Khởi tạo ProjectManager TRƯỚC (chưa có task_manager)
     project_manager = ProjectManager(
         "projects.csv",
         staff_manager=staff_manager,
-        task_manager=task_manager
+        task_manager=None
     )
 
-    # =========================================================================
-    # BƯỚC KẾT NỐI QUAN TRỌNG (DEPENDENCY INJECTION)
-    # =========================================================================
-    
-    # 4.1. Cập nhật project_manager cho task_manager (như cũ)
-    # Để TaskManager validate ngày tháng dựa trên Project
-    task_manager.project_manager = project_manager
+    # 3. Khởi tạo TaskManager (TRUYỀN project_manager)
+    task_manager = TaskManager(
+        filename="tasks.csv",
+        staff_manager=staff_manager,
+        project_manager=project_manager
+    )
 
-    # 4.2. [MỚI THÊM] Cập nhật task_manager cho staff_manager
-    # Để khi xóa Staff -> StaffManager gọi sang TaskManager để unassign task
-    # (Lưu ý: Bạn phải chắc chắn đã thêm hàm set_task_manager vào class StaffManager rồi nhé)
+    # 4. GÁN NGƯỢC task_manager cho project_manager
+    project_manager.task_manager = task_manager
+
+    # 5. Gán task_manager cho staff_manager
     staff_manager.set_task_manager(task_manager)
 
-    # =========================================================================
-
-    # 5. Khởi tạo các manager báo cáo
+    # 6. Khởi tạo các manager báo cáo
     weekly_report_manager = WeeklyReportManager("weekly_reports.csv")
     final_report_manager = FinalReportManager("final_reports.csv")
+
+    # ===== MENU CHÍNH =====
     while True:
         print("\n===== HỆ THỐNG QUẢN LÝ DỰ ÁN =====")
         print("1. Quản lý nhân viên")
@@ -232,12 +225,11 @@ def main():
         elif choice == "4":
             progress_menu(project_manager, task_manager)
         elif choice == "5":
-            # Truyền tất cả Manager cần thiết vào report_menu
             report_menu(
-                weekly_report_manager, 
-                final_report_manager, 
-                project_manager, 
-                staff_manager, 
+                weekly_report_manager,
+                final_report_manager,
+                project_manager,
+                staff_manager,
                 task_manager
             )
         elif choice == "0":

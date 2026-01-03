@@ -46,20 +46,31 @@ class ProjectManager(ProjectItemManager):
                 print("Sai định dạng mã dự án (VD: P25_00001)")
                 continue
             project = next(
-            (p for p in self.items if p.project_id == pid),
-            None
+                (p for p in self.items if p.project_id == pid),
+                None
             )
             if not project:
                 print("Mã dự án không tồn tại trong hệ thống.")
                 continue
             return pid
 
+    # ================= LOGIC TRẠNG THÁI MỚI =================
+    def update_project_status(self, project_id, task_manager):
+        """
+        Hàm được gọi từ TaskManager khi thêm/sửa/xóa task.
+        Dùng để tự động cập nhật trạng thái Project.
+        """
+        project = self.find_by_id(project_id)
+        if project:
+            project.auto_update_status(task_manager)
+            self.save_to_file()
+
     # ================= CRUD =================
     def add_project(self):
         print("\n--- THÊM DỰ ÁN ---")
         project = Project()
 
-        # 1. Nhập thông tin cơ bản dự án (không bao gồm PM)
+        # 1. Nhập thông tin cơ bản dự án 
         project.input_info(
             existing_project_ids=[p.project_id for p in self.items]
         )
@@ -102,9 +113,12 @@ class ProjectManager(ProjectItemManager):
             print(f"Không tìm thấy dự án '{project_id}'.")
             return
 
+        # Lưu ý: Hàm update_info() nằm trong ProjectItem hoặc Project.
+        # Nếu Project không override lại thì nó sẽ dùng của cha.
+        # Logic nhập tay status_project KHÔNG được phép có ở đây.
         project.update_info()
 
-        # Cập nhật PM nếu muốn
+        # Cập nhật PM 
         while True:
             pm_id = input(f"Mã PM hiện tại [{getattr(project,'pm_id','')}], nhập mới hoặc Enter để giữ: ").strip()
             if not pm_id:
@@ -139,7 +153,7 @@ class ProjectManager(ProjectItemManager):
             print("Đã hủy thao tác")
             return
 
-        # XÓA TẤT CẢ TASK THUỘC PROJECT (CHA → CON)
+        # XÓA TẤT CẢ TASK THUỘC PROJECT 
         tasks_to_delete = [
             t for t in self.task_manager.items
             if t.project_id == project.project_id
@@ -152,7 +166,7 @@ class ProjectManager(ProjectItemManager):
             # xóa task khỏi task manager
             self.task_manager.items.remove(task)
 
-        # XÓA PROJECT (CHA)
+        # XÓA PROJECT 
         self.items.remove(project)
 
         # LƯU FILE
@@ -175,7 +189,7 @@ class ProjectManager(ProjectItemManager):
             print("Không tìm thấy dự án")
             return
 
-        print(f"{'Mã DA':<10} | {'Tên dự án':<25} | {'Khách hàng':<20} | {'Ngày BD':<12} | {'Ngày DK':<12} | {'Ngày TT':<12} | {'Ngân sách':<12} | {'Trạng thái':<15} | {'Project Manager'}")
+        print(f"{'Mã DA':<10} | {'Tên dự án':<25} | {'Khách hàng':<20} | {'Ngân sách':<12} | {'Ngày BD':<12} | {'Ngày DK':<12} | {'Ngày TT':<12} | {'Trạng thái':<15} | {'Project Manager'}")
         for p in result:
             p.display_info()
 
@@ -194,13 +208,14 @@ class ProjectManager(ProjectItemManager):
         if not self.task_manager:
             print("Chưa kết nối với Task Manager.")
             return
-
         tasks_of_project = [t for t in self.task_manager.items if t.project_id == project_id]
         if not tasks_of_project:
             print("Dự án này chưa có công việc nào.")
             return
 
         member_ids = {t.assignee_id for t in tasks_of_project if t.assignee_id and t.assignee_id != "Unassigned"}
+        if project.pm_id:
+            member_ids.add(project.pm_id)
         if not member_ids:
             print("Dự án chưa phân công công việc cho nhân viên.")
             return
@@ -227,7 +242,7 @@ class ProjectManager(ProjectItemManager):
             return
 
         print("\n================ THÔNG TIN DỰ ÁN ================")
-        print(f"{'Mã DA':<10} | {'Tên dự án':<25} | {'Khách hàng':<20} | {'Ngày BD':<12} | {'Ngày DK':<12} | {'Ngày TT':<12} | {'Ngân sách':<12} | {'Trạng thái':<15} | {'Project Manager'}")
+        print(f"{'Mã DA':<10} | {'Tên dự án':<25} | {'Khách hàng':<20} | {'Ngân sách':<12} | {'Ngày BD':<12} | {'Ngày DK':<12} | {'Ngày TT':<12} | {'Trạng thái':<15} | {'Project Manager'}")
         print("-"*100)
         for p in self.items:
             p.display_info()

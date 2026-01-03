@@ -6,7 +6,6 @@ from reports.base_report import BaseReport
 class FinalReport(BaseReport):
     """
     Báo cáo tổng kết dự án
-    - Snapshot cuối cùng của dự án
     - Chỉ được tạo SAU KHI dự án kết thúc
     - Người lập phải là PM của dự án
     """
@@ -31,7 +30,7 @@ class FinalReport(BaseReport):
 
         self.is_loading = is_loading
 
-        # ===== SNAPSHOT DATA =====
+        # ===== DATA =====
         stats = stats or {}
 
         self.project_name = stats.get("project_name", "")
@@ -48,9 +47,7 @@ class FinalReport(BaseReport):
         self.overall_progress = stats.get("overall_progress", 0.0)
         self.project_status = stats.get("project_status", "N/A")
 
-    # ======================================================
     # LOAD DATA + VALIDATION
-    # ======================================================
     def input_info(self, project_manager, task_manager, staff_manager):
 
         project = project_manager.find_by_id(self.project_id)
@@ -102,9 +99,7 @@ class FinalReport(BaseReport):
         else:
             self.overall_progress = 0.0
 
-    # ======================================================
     # VALIDATION
-    # ======================================================
     def _validate_report_date(self):
         if not self.actual_end_date:
             raise ValueError("Dự án chưa có ngày kết thúc thực tế")
@@ -125,9 +120,7 @@ class FinalReport(BaseReport):
                     pass
         return None
 
-    # ======================================================
     # LOAD FROM CSV
-    # ======================================================
     @classmethod
     def from_dict(cls, data):
         def safe_int(value, default=0):
@@ -172,9 +165,7 @@ class FinalReport(BaseReport):
             is_loading=True
         )
 
-    # ======================================================
     # HIỂN THỊ 
-    # ======================================================
     def display_info(self):
         print("\n--- CHI TIẾT BÁO CÁO TỔNG KẾT ---")
         print(f"Mã báo cáo      : {self.report_id}")
@@ -192,10 +183,7 @@ class FinalReport(BaseReport):
         print(f"Tiến độ (%)     : {self.overall_progress}")
         print(f"Trạng thái DA   : {self.project_status}")
 
-    # ======================================================
     # CSV
-    # ======================================================
-    @staticmethod
     @staticmethod
     def csv_fields():
         return [
@@ -206,14 +194,14 @@ class FinalReport(BaseReport):
         ]
 
     def as_dict(self):
-        # Hàm con để format ngày tháng gọn
+        # Hàm con để format ngày tháng 
         def fmt(d): return d.strftime("%d/%m/%Y") if d else ""
         def fmt_datetime(d): return d.strftime("%d/%m/%Y %H:%M:%S") if d else ""
 
-        # 1. Lấy dữ liệu từ cha (sẽ chứa các key thừa như 'id', 'name'...)
+        # 1. Lấy dữ liệu từ cha
         data = super().as_dict()
 
-        # 2. Cập nhật/Ghi đè các trường dữ liệu của con
+        # 2. Cập nhật/Ghi đè các trường dữ liệu 
         data.update({
             "project_id": self.project_id,
             "report_id": self.report_id,
@@ -232,7 +220,6 @@ class FinalReport(BaseReport):
             "overall_progress": self.overall_progress,
             "project_status": self.project_status,
         })
-        # 3. QUAN TRỌNG: Lọc bỏ các key thừa
 
         valid_fields = set(self.csv_fields())
         filtered_data = {k: v for k, v in data.items() if k in valid_fields}

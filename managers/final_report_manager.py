@@ -7,9 +7,7 @@ class FinalReportManager:
     def __init__(self, filename="final_reports.csv"):
         self.filename = filename
 
-    # ======================================================
     # CREATE FINAL REPORT
-    # ======================================================
     def create_report(self, project_manager, staff_manager, task_manager):
         print("\n--- TẠO BÁO CÁO TỔNG KẾT ---")
 
@@ -53,7 +51,6 @@ class FinalReportManager:
                 continue
 
             # QUAN TRỌNG: Kiểm tra PM này có quản lý dự án này không?
-            # (Giả sử project có thuộc tính pm_id)
             if hasattr(selected_project, 'pm_id') and selected_project.pm_id != sid:
                 print(f"Lỗi: Bạn không phải quản lý của dự án {selected_project.project_id}.")
                 print(f"(Dự án này thuộc về PM: {selected_project.pm_id})")
@@ -76,7 +73,6 @@ class FinalReportManager:
                 is_loading=False
             )
 
-            # Nạp dữ liệu + validate
             report.input_info(
                 project_manager=project_manager,
                 task_manager=task_manager,
@@ -95,9 +91,7 @@ class FinalReportManager:
         except Exception as e:
             print(f"Lỗi khi tạo báo cáo: {e}")
 
-    # ======================================================
     # VIEW DETAIL 
-    # ======================================================
     def view_report_detail(self, project_manager, staff_manager, task_manager):
         print("\n--- XEM BÁO CÁO TỔNG KẾT ---")
         while True:
@@ -120,9 +114,7 @@ class FinalReportManager:
                 print(f"Dữ liệu báo cáo bị lỗi: {e}")
                 break
 
-    # ======================================================
-    # SEARCH (CÓ REGEX)
-    # ======================================================
+    # SEARCH 
     def search_report(self):
         print("\n--- TÌM KIẾM BÁO CÁO ---")
         while True:
@@ -134,7 +126,6 @@ class FinalReportManager:
             # Pattern cho Mã Báo Cáo Tổng Kết (VD: FRP25_00001)
             is_valid_report = re.match(r"^FRP\d{2}_\d{5}$", keyword)
 
-            # Logic: Nếu KHÔNG đúng cái nào cả -> Báo lỗi
             if not (is_valid_project or is_valid_report):
                 print(">>> Lỗi định dạng! Vui lòng nhập đúng 1 trong 2 loại:")
                 print("    1. Mã dự án : Pyy_nnnnn   (VD: P25_00001)")
@@ -160,9 +151,7 @@ class FinalReportManager:
                 self._display_table(results)
                 break
 
-    # ======================================================
     # DISPLAY ALL
-    # ======================================================
     def display_all(self):
         data = self._load_all()
         if not data:
@@ -171,9 +160,7 @@ class FinalReportManager:
         print(f"\n--- DANH SÁCH BÁO CÁO ({len(data)}) ---")
         self._display_table(data)
 
-    # ======================================================
-    # DELETE (FIX LỖI HEADER/FIELDNAMES)
-    # ======================================================
+    # DELETE 
     def delete_report(self):
         print("\n--- XÓA BÁO CÁO ---")
         rid = input("Nhập mã báo cáo cần xóa: ").strip()
@@ -205,9 +192,7 @@ class FinalReportManager:
         except Exception as e:
             print(f"Lỗi khi ghi file: {e}")
 
-    # ======================================================
     # INTERNAL
-    # ======================================================
     def _load_all(self):
         try:
             with open(self.filename, "r", encoding="utf-8") as f:

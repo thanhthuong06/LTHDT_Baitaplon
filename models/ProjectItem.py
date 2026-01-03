@@ -12,8 +12,6 @@ class ProjectItem:
         self.name = input("Nhập tên: ").strip()
         self.description = input("Nhập mô tả: ").strip()
         self.input_start_date()
-
-    # TÁCH RIÊNG NGÀY BẮT ĐẦU
     def input_start_date(self):
         while True:
             date_str = input("Ngày bắt đầu (dd/mm/yyyy): ").strip()

@@ -1,14 +1,11 @@
-# models/project.py
 import re
 from datetime import datetime
 from models.ProjectItem import ProjectItem
-
 
 class Project(ProjectItem):
     STATUS_LIST = [
         "Chưa khởi động",
         "Đang thực hiện",
-        "Tạm dừng",
         "Hoàn thành",
         "Hủy"
     ]
@@ -18,25 +15,21 @@ class Project(ProjectItem):
         self.project_id = ""
         self.project_name = ""
         self.customer = ""
+        self.description = ""
+        self.start_date = None
         self.expected_end_date = None
         self.actual_end_date = None
         self.budget = 0.0
-        self.status_project = ""
-        self.pm_id = ""        # Mã Project Manager
+        self.status_project = "Chưa khởi động"
+        self.pm_id = ""
 
+    # ================= CSV =================
     @staticmethod
     def csv_fields():
         return [
-            "project_id",
-            "project_name",
-            "customer",
-            "description",
-            "start_date",
-            "expected_end_date",
-            "actual_end_date",
-            "budget",
-            "status_project",
-            "pm_id",  # thêm trường PM
+            "project_id", "project_name", "customer", "description",
+            "start_date", "expected_end_date", "actual_end_date",
+            "budget", "status_project", "pm_id",
         ]
 
     def to_dict(self):
@@ -54,7 +47,7 @@ class Project(ProjectItem):
         }
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data):
         p = cls()
         p.project_id = data.get("project_id", "")
         p.id = p.project_id
@@ -66,16 +59,13 @@ class Project(ProjectItem):
         p.expected_end_date = datetime.strptime(data["expected_end_date"], "%Y-%m-%d") if data.get("expected_end_date") else None
         p.actual_end_date = datetime.strptime(data["actual_end_date"], "%Y-%m-%d") if data.get("actual_end_date") else None
         p.budget = float(data.get("budget", 0))
-        p.status_project = data.get("status_project", "")
+        p.status_project = data.get("status_project", "Chưa khởi động")
         p.pm_id = data.get("pm_id", "")
         return p
 
-    # ================= INPUT =================
-    def input_info(self, existing_project_ids=None, staff_manager=None):
-        if existing_project_ids is None:
-            existing_project_ids = []
-
-        # PROJECT ID
+    # ================= INPUT INFO =================
+    def input_info(self, existing_project_ids):
+        # 1. Mã dự án
         while True:
             pid = input("Nhập mã dự án (PYY_NNNNN): ").strip()
             if not re.fullmatch(r"P\d{2}_\d{5}", pid):
@@ -88,7 +78,7 @@ class Project(ProjectItem):
             self.id = pid
             break
 
-        # NAME
+        # 2. Tên dự án
         while True:
             name = input("Nhập tên dự án: ").strip()
             if len(name) < 2:
@@ -98,7 +88,7 @@ class Project(ProjectItem):
             self.name = self.project_name
             break
 
-        # CUSTOMER
+        # 3. Khách hàng
         while True:
             customer = input("Nhập khách hàng: ").strip()
             if not customer:
@@ -107,41 +97,31 @@ class Project(ProjectItem):
             self.customer = customer.title()
             break
 
-        # DESCRIPTION
+        # 4. Mô tả
         self.description = input("Nhập mô tả dự án: ").strip()
 
-        # START DATE
-        self.input_start_date()
+        # 5. Ngày bắt đầu
+        while True:
+            try:
+                s_str = input("Ngày bắt đầu (dd/mm/yyyy): ").strip()
+                self.start_date = datetime.strptime(s_str, "%d/%m/%Y")
+                break
+            except ValueError:
+                print("Ngày không hợp lệ. Nhập lại.")
 
-        # EXPECTED END DATE
+        # 6. Ngày kết thúc dự kiến
         while True:
             try:
                 d = datetime.strptime(input("Ngày hoàn thành dự kiến (dd/mm/yyyy): "), "%d/%m/%Y")
                 if d < self.start_date:
-                    print("Ngày dự kiến phải >= ngày bắt đầu")
+                    print(f"Ngày dự kiến phải >= ngày bắt đầu ({self.start_date.strftime('%d/%m/%Y')})")
                     continue
                 self.expected_end_date = d
                 break
             except ValueError:
                 print("Sai định dạng ngày")
 
-        # ACTUAL END DATE
-        while True:
-            s = input("Ngày hoàn thành thực tế (Enter nếu chưa xong): ").strip()
-            if not s:
-                self.actual_end_date = None
-                break
-            try:
-                d = datetime.strptime(s, "%d/%m/%Y")
-                if d < self.start_date:
-                    print("Ngày thực tế phải >= ngày bắt đầu")
-                    continue
-                self.actual_end_date = d
-                break
-            except ValueError:
-                print("Sai định dạng ngày")
-
-        # BUDGET
+        # 7. Ngân sách
         while True:
             try:
                 self.budget = float(input("Ngân sách dự kiến: "))
@@ -152,203 +132,125 @@ class Project(ProjectItem):
             except ValueError:
                 print("Phải là số")
 
-        # STATUS
+        self.actual_end_date = None
+        self.status_project = "Chưa khởi động"
+
+    # ================= UPDATE INFO (ĐÃ BỔ SUNG RÀNG BUỘC) =================
+    def update_info(self):
+        print("\n--- CẬP NHẬT THÔNG TIN DỰ ÁN (Enter để giữ nguyên) ---")
+
+        # 1. Tên dự án
         while True:
-            print("Chọn trạng thái:")
-            for i, st in enumerate(self.STATUS_LIST, 1):
-                print(f"{i}. {st}")
-
-            try:
-                choice = int(input("Chọn: "))
-                if choice < 1 or choice > len(self.STATUS_LIST):
-                    raise ValueError
-
-                status = self.STATUS_LIST[choice - 1]
-                today = datetime.now()
-
-                if status == "Hoàn thành":
-                    # Chưa tới hạn dự kiến
-                    if self.expected_end_date and today < self.expected_end_date:
-                        print("Dự án chưa tới ngày hoàn thành dự kiến → không thể chọn 'Hoàn thành'")
-                        continue
-
-                    # Có ngày thực tế nhưng sai logic
-                    if self.actual_end_date and self.actual_end_date > today:
-                        print("Ngày hoàn thành thực tế không hợp lệ")
-                        continue
-
-                self.status_project = status
-                break
-
-            except ValueError:
-                print("Lựa chọn không hợp lệ")
-
-
-        # PM (bắt buộc)
-        if staff_manager:
-            while True:
-                pm_id = input("Nhập mã PM của dự án: ").strip()
-                if not pm_id:
-                    print("Phải nhập PM hoặc gõ 'exit' để hủy")
-                    continue
-                if pm_id.lower() == "exit":
-                    print("Hủy nhập dự án.")
-                    return False
-                staff = staff_manager.find_by_id(pm_id)
-                if not staff:
-                    print("Nhân viên không tồn tại.")
-                    continue
-                if getattr(staff, "management_title", "") != "Project Manager":
-                    print("Người nhập phải là Project Manager")
-                    continue
-                self.pm_id = pm_id
-                break
-
-        return True
-    # ================= UPDATE (FULL VALIDATION) =================
-    def update_info(self, staff_manager=None):
-        print(f"\n--- CẬP NHẬT DỰ ÁN: {self.project_id} ---")
-        print("(Nhấn Enter để giữ nguyên giá trị cũ)")
-
-        # 1. Cập nhật Tên (Ràng buộc: >= 2 ký tự)
-        while True:
-            new_name = input(f"Tên dự án [{self.project_name}]: ").strip()
+            new_name = input(f"Tên dự án ({self.project_name}): ").strip()
             if not new_name:
-                break  # Bỏ qua, giữ nguyên cũ
+                break # Giữ nguyên cũ
             if len(new_name) < 2:
-                print("Lỗi: Tên dự án phải tối thiểu 2 ký tự.")
-                continue
-            self.project_name = new_name.title()
-            self.name = self.project_name
-            break
-
-        # 2. Cập nhật Khách hàng (Ràng buộc: không để trống nếu đã nhập sửa)
-        while True:
-            new_customer = input(f"Khách hàng [{self.customer}]: ").strip()
-            if not new_customer:
+                print("Tên tối thiểu 2 ký tự.")
+            else:
+                self.project_name = new_name.title()
+                self.name = self.project_name
                 break
-            self.customer = new_customer.title()
-            break
 
-        # 3. Cập nhật Mô tả (Không ràng buộc khắt khe)
-        new_desc = input(f"Mô tả [{self.description}]: ").strip()
+        # 2. Khách hàng
+        new_customer = input(f"Khách hàng ({self.customer}): ").strip()
+        if new_customer:
+            self.customer = new_customer.title()
+
+        # 3. Mô tả
+        new_desc = input(f"Mô tả ({self.description}): ").strip()
         if new_desc:
             self.description = new_desc
 
-        # 4. Cập nhật Ngày dự kiến hoàn thành (Ràng buộc: >= start_date)
-        cur_expected = self.expected_end_date.strftime("%d/%m/%Y") if self.expected_end_date else "N/A"
+        # 4. Ngày bắt đầu
+        # Logic: Nếu sửa ngày bắt đầu, phải kiểm tra xem nó có lớn hơn ngày kết thúc hiện tại không
         while True:
-            date_str = input(f"Ngày dự kiến HT [{cur_expected}]: ").strip()
-            if not date_str:
+            s_old = self.start_date.strftime('%d/%m/%Y') if self.start_date else ''
+            new_s = input(f"Ngày bắt đầu ({s_old}): ").strip()
+            if not new_s:
                 break
             try:
-                new_date = datetime.strptime(date_str, "%d/%m/%Y")
-                if self.start_date and new_date < self.start_date:
-                    print(f"Lỗi: Ngày dự kiến ({date_str}) phải sau ngày bắt đầu ({self.start_date.strftime('%d/%m/%Y')})")
+                temp_start = datetime.strptime(new_s, "%d/%m/%Y")
+                # Kiểm tra ràng buộc với Expected End Date hiện tại
+                if self.expected_end_date and temp_start > self.expected_end_date:
+                    print(f"Lỗi: Ngày bắt đầu mới không được lớn hơn ngày kết thúc dự kiến hiện tại ({self.expected_end_date.strftime('%d/%m/%Y')})")
                     continue
-                self.expected_end_date = new_date
+                
+                self.start_date = temp_start
                 break
             except ValueError:
-                print("Lỗi: Sai định dạng ngày (dd/mm/yyyy).")
+                print("Ngày không hợp lệ (dd/mm/yyyy).")
 
-        # 5. Cập nhật Ngân sách (Ràng buộc: > 0)
+        # 5. Ngày kết thúc dự kiến
+        # Logic: Nếu sửa ngày kết thúc, phải kiểm tra xem nó có nhỏ hơn ngày bắt đầu hiện tại không
         while True:
-            budget_str = input(f"Ngân sách [{self.budget}]: ").strip()
-            if not budget_str:
+            e_old = self.expected_end_date.strftime('%d/%m/%Y') if self.expected_end_date else ''
+            new_e = input(f"Ngày hoàn thành dự kiến ({e_old}): ").strip()
+            if not new_e:
                 break
             try:
-                val = float(budget_str)
+                temp_end = datetime.strptime(new_e, "%d/%m/%Y")
+                # Kiểm tra ràng buộc với Start Date hiện tại
+                if self.start_date and temp_end < self.start_date:
+                    print(f"Lỗi: Ngày kết thúc phải >= ngày bắt đầu hiện tại ({self.start_date.strftime('%d/%m/%Y')})")
+                    continue
+                
+                self.expected_end_date = temp_end
+                break
+            except ValueError:
+                print("Ngày không hợp lệ (dd/mm/yyyy).")
+
+        # 6. Ngân sách
+        while True:
+            b_old = f"{self.budget:.0f}"
+            new_b = input(f"Ngân sách ({b_old}): ").strip()
+            if not new_b:
+                break
+            try:
+                val = float(new_b)
                 if val <= 0:
-                    print("Lỗi: Ngân sách phải > 0.")
-                    continue
-                self.budget = val
-                break
-            except ValueError:
-                print("Lỗi: Vui lòng nhập số.")
-
-        # 6. Cập nhật Trạng thái (Logic phức tạp về ngày tháng)
-        # Không cần while loop bao ngoài vì ta chọn theo menu số, sai thì thôi
-        print(f"Trạng thái hiện tại: {self.status_project}")
-        print("Danh sách trạng thái mới:")
-        for i, st in enumerate(self.STATUS_LIST, 1):
-            print(f"{i}. {st}")
-        
-        st_choice = input("Chọn trạng thái mới (Enter để bỏ qua): ").strip()
-        if st_choice:
-            try:
-                idx = int(st_choice) - 1
-                if 0 <= idx < len(self.STATUS_LIST):
-                    new_status = self.STATUS_LIST[idx]
-                    
-                    # Logic kiểm tra: Nếu chọn Hoàn thành mà chưa tới ngày dự kiến
-                    is_valid = True
-                    today = datetime.now()
-                    
-                    if new_status == "Hoàn thành":
-                         if self.expected_end_date and today < self.expected_end_date:
-                            confirm = input("CẢNH BÁO: Chưa tới ngày dự kiến. Vẫn muốn set 'Hoàn thành'? (y/n): ")
-                            if confirm.lower() != 'y':
-                                is_valid = False
-                    
-                    if is_valid:
-                        self.status_project = new_status
-                        # Tự động gán ngày thực tế nếu chưa có
-                        if new_status == "Hoàn thành" and not self.actual_end_date:
-                            self.actual_end_date = today
-                            print(f" Đã cập nhật ngày thực tế: {today.strftime('%d/%m/%Y')}")
-                    else:
-                        print(" Đã hủy thay đổi trạng thái.")
+                    print("Ngân sách phải > 0")
                 else:
-                    print("Lỗi: Lựa chọn không nằm trong danh sách.")
+                    self.budget = val
+                    break
             except ValueError:
-                print("Lỗi: Nhập không hợp lệ.")
+                print("Phải là số.")
+        
+        print("Đã cập nhật thông tin cơ bản.")
 
-        # 7. Cập nhật PM (Vòng lặp bắt buộc nhập đúng hoặc Enter)
-        if staff_manager:
-            while True:
-                new_pm = input(f"Mã PM [{self.pm_id}]: ").strip()
-                if not new_pm:
-                    break # Enter để bỏ qua
-                
-                staff = staff_manager.find_by_id(new_pm)
-                if not staff:
-                    print(f"Lỗi: Không tìm thấy nhân viên có mã '{new_pm}'. Vui lòng nhập lại.")
-                    continue # Quay lại đầu vòng lặp
-                
-                # Kiểm tra chức vụ (dùng getattr cho an toàn)
-                if getattr(staff, "management_title", "") != "Project Manager":
-                    print(f"Lỗi: Nhân viên '{staff.name}' không phải là Project Manager.")
-                    continue # Quay lại đầu vòng lặp
-                
-                # Nếu mọi thứ OK
-                self.pm_id = new_pm
-                print(f" Đã cập nhật PM mới: {staff.name}")
-                break
+    # ================= AUTO STATUS =================
+    def auto_update_status(self, task_manager):
+        tasks = [t for t in task_manager.items if t.project_id == self.project_id]
+
+        if not tasks:
+            self.status_project = "Chưa khởi động"
+            self.actual_end_date = None
+            return
+
+        all_completed = all(t.status_task == "Completed" for t in tasks)
+
+        if all_completed:
+            self.status_project = "Hoàn thành"
+            if not self.actual_end_date:
+                self.actual_end_date = datetime.now()
+        else:
+            self.status_project = "Đang thực hiện"
+            self.actual_end_date = None
 
     # ================= DISPLAY =================
     def display_info(self):
-        # 1. Xử lý hiển thị ngày tháng (tránh lỗi nếu ngày là None)
-        s_date = self.start_date.strftime("%d/%m/%Y") if self.start_date else "N/A"
-        e_date = self.expected_end_date.strftime("%d/%m/%Y") if self.expected_end_date else "N/A"
-        
-        # Ngày thực tế: Nếu chưa có thì hiện dấu gạch ngang
-        if self.actual_end_date:
-            a_date = self.actual_end_date.strftime("%d/%m/%Y")
-        else:
-            a_date = "--/--/----"
-
-        # 2. Xử lý hiển thị tiền tệ (thêm dấu phẩy)
-        budget_str = f"{self.budget:,.0f} VNĐ"
+        s = self.start_date.strftime("%d/%m/%Y") if self.start_date else "N/A"
+        e = self.expected_end_date.strftime("%d/%m/%Y") if self.expected_end_date else "N/A"
+        a = self.actual_end_date.strftime("%d/%m/%Y") if self.actual_end_date else "--/--/----"
+        budget = f"{self.budget:,.0f} VNĐ"
 
         print(
-            f"{self.project_id:<10} | "        # Mã dự án
-            f"{self.project_name:<20} | "      # Tên dự án
-            f"{self.customer:<15} | "          # Khách hàng
-            f"{budget_str:>15} | "             # Ngân sách (căn phải cho số)
-            f"{s_date:<10} | "                 # Ngày bắt đầu
-            f"{e_date:<10} | "                 # Ngày dự kiến
-            f"{a_date:<10} | "                 # Ngày thực tế
-            f"{self.status_project:<12} | "    # Trạng thái
-            f"{self.pm_id}"                # Mã PM
+            f"{self.project_id:<10} | "
+            f"{self.project_name:<20} | "
+            f"{self.customer:<15} | "
+            f"{budget:>15} | "
+            f"{s:<10} | "
+            f"{e:<10} | "
+            f"{a:<10} | "
+            f"{self.status_project:<12} | "
+            f"{self.pm_id}"
         )
-    

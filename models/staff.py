@@ -127,17 +127,24 @@ class Staff:
             print("Vai trò không hợp lệ. Nhập lại.")
 
         # ===== MANAGEMENT TITLE =====
-        while True:
-            print("Chức danh quản lý (Enter nếu không có):")
-            print(", ".join(CHUC_DANH_QUAN_LY))
-            value = input("Nhập chức danh: ").strip().title()
-            if value == "":
-                self.management_title = None
-                break
-            if value in CHUC_DANH_QUAN_LY:
-                self.management_title = value
-                break
-            print("Chức danh quản lý không hợp lệ. Nhập lại hoặc Enter để bỏ qua.")
+        if self.level != "Senior":
+            self.management_title = None
+            print("Nhân sự chưa đạt level Senior → không được gán chức danh quản lý.")
+        else:
+            while True:
+                print("Chức danh quản lý (Enter nếu không có):")
+                print(", ".join(CHUC_DANH_QUAN_LY))
+                value = input("Nhập chức danh: ").strip().title()
+
+                if value == "":
+                    self.management_title = None
+                    break
+
+                if value in CHUC_DANH_QUAN_LY:
+                    self.management_title = value
+                    break
+
+                print("Chức danh quản lý không hợp lệ. Nhập lại.")
 
     # ================= UPDATE =================
     def update_info(self):

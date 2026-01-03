@@ -6,7 +6,7 @@ from managers.ProjectItem_manager import ProjectItemManager
 
 
 class TaskManager(ProjectItemManager):
-    def __init__(self, filename, staff_manager):
+    def __init__(self, filename, staff_manager, project_manager):
         super().__init__(
             filename=filename,
             cls=Task,
@@ -14,13 +14,11 @@ class TaskManager(ProjectItemManager):
             id_field="task_id"
         )
         self.staff_manager = staff_manager
+        self.project_manager = project_manager
         self.task_list = self.items
 
     # ================= SAVE =================
     def save_to_file(self):
-        """
-        Alias để đồng bộ tên hàm với ProjectManager
-        """
         super().save_to_file()
 
     # ================= FIND =================
@@ -33,7 +31,7 @@ class TaskManager(ProjectItemManager):
         task = Task()
         existing_ids = [t.id for t in self.items]
 
-        # --- Chọn dự án ---
+        # ===== CHỌN DỰ ÁN =====
         while True:
             project_id = input("Nhập mã dự án (PYY_NNNNN): ").strip()
             if not re.fullmatch(r"P\d{2}_\d{5}", project_id):
@@ -46,7 +44,7 @@ class TaskManager(ProjectItemManager):
                 continue
             break
 
-        # --- Mã task ---
+        # ===== MÃ TASK =====
         prefix = f"T{project_id}_"
         while True:
             print(f"Mã task bắt buộc theo định dạng: {prefix}NNNNN")
@@ -62,25 +60,24 @@ class TaskManager(ProjectItemManager):
         task.id = task_id
         task.project_id = project_id
 
-        # --- Nhập thông tin ---
+        # ===== NHẬP THÔNG TIN =====
         staff_list = self.staff_manager.staff_list if self.staff_manager else []
         task.input_info(staff_list, project)
 
-        # --- Validate ngày ---
+        # ===== VALIDATE NGÀY =====
         if task.start_date < project.start_date:
-            print("Ngày bắt đầu task < ngày bắt đầu dự án. Tự chỉnh.")
+            print("Ngày bắt đầu task < ngày bắt đầu dự án → tự chỉnh.")
             task.start_date = project.start_date
 
         if task.start_date > project.expected_end_date:
-            print("Ngày bắt đầu task > ngày kết thúc dự án. Tự chỉnh.")
+            print("Ngày bắt đầu task > ngày kết thúc dự án → tự chỉnh.")
             task.start_date = project.expected_end_date
 
-
         if task.deadline > project.expected_end_date:
-            print("Deadline task > ngày kết thúc dự kiến dự án. Tự chỉnh.")
+            print("Deadline task > ngày kết thúc dự án → tự chỉnh.")
             task.deadline = project.expected_end_date
 
-        # --- Gán task cho staff ---
+        # ===== GÁN TASK CHO NHÂN SỰ =====
         if task.assignee_id and self.staff_manager:
             staff = self.staff_manager.find_by_id(task.assignee_id)
             if staff:
@@ -92,8 +89,12 @@ class TaskManager(ProjectItemManager):
         if self.staff_manager:
             self.staff_manager.save_to_file()
 
+        # CẬP NHẬT TRẠNG THÁI PROJECT 
+        self.project_manager.update_project_status(project_id, self)
+
         print(f"Đã thêm task {task.id} thành công!")
 
+    # ================= UPDATE =================
     def update_task(self):
         print("\n--- CẬP NHẬT TASK ---")
         task_id = input("Nhập mã task: ").strip()
@@ -109,8 +110,13 @@ class TaskManager(ProjectItemManager):
         task.update_info(staff_list, project)
 
         self.save_to_file()
+
+        # CẬP NHẬT TRẠNG THÁI PROJECT
+        self.project_manager.update_project_status(task.project_id, self)
+
         print("Cập nhật task thành công!")
 
+    # ================= DELETE =================
     def delete_task(self):
         print("\n--- XÓA TASK ---")
         task_id = input("Nhập mã task: ").strip()
@@ -135,6 +141,9 @@ class TaskManager(ProjectItemManager):
         if self.staff_manager:
             self.staff_manager.save_to_file()
 
+        # CẬP NHẬT TRẠNG THÁI PROJECT
+        self.project_manager.update_project_status(task.project_id, self)
+
         print("Đã xóa task.")
 
     # ================= DISPLAY =================
@@ -143,7 +152,10 @@ class TaskManager(ProjectItemManager):
             print("Danh sách task trống.")
             return
 
-        print(f"{'Dự án':<12} | {'ID':<18} | {'Tên':<20} | {'Assignee':<12} | {'Deadline':<12} | {'Status':<12}")
+        print(
+            f"{'Dự án':<12} | {'ID':<18} | {'Tên':<20} | "
+            f"{'Assignee':<12} | {'Deadline':<12} | {'Status':<12}"
+        )
         for t in self.items:
             print(
                 f"{t.project_id:<12} | {t.id:<18} | {t.name:<20} | "
@@ -167,6 +179,7 @@ class TaskManager(ProjectItemManager):
         for t in overdue:
             print(f"{t.id} | {t.name} | Deadline: {t.deadline.strftime('%d/%m/%Y')}")
 
+    # ================= UNASSIGN =================
     def unassign_staff(self, staff_id):
         updated = False
         for t in self.items:
@@ -177,7 +190,8 @@ class TaskManager(ProjectItemManager):
         if updated:
             self.save_to_file()
             print(f"Đã gỡ task khỏi nhân viên {staff_id}")
-    
+
+    # ================= SEARCH =================
     def search_task(self):
         print("\n--- TÌM KIẾM TASK ---")
         keyword = input("Nhập mã task hoặc tên task: ").strip().lower()

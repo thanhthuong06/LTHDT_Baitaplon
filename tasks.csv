@@ -1,1 +1,7 @@
 project_id,task_id,task_name,task_description,assignee_id,start_date,deadline,completed_date,priority,status_task
+P25_00002,TP25_00002_00001,Quản Lý,giám sát thực hiện,NV_00008,10/12/2025,20/12/2025,01/01/2026,Medium,Completed
+P25_00001,TP25_00001_00001,Quản Lý Xuất Hàng,quản lý xuất hàng hóa,NV_00002,15/12/2025,20/12/2025,,Medium,In Progress
+P25_00001,TP25_00001_00002,Quản Lý Nhập Hàng,Quản lý nhập hàng hóa,NV_00003,23/12/2025,30/12/2025,,High,In Progress
+P25_00003,TP25_00003_00001,Quản Lý Danh Sách Lớp Học Phần,danh sách lớp học phần,NV_00002,05/12/2025,20/12/2025,02/01/2026,Medium,Completed
+P25_00005,TP25_00005_00001,Kiểm Thử Nội Dung,Kiểm tra nội dung,NV_00006,15/10/2025,20/10/2025,03/01/2026,Critical,Completed
+P25_00005,TP25_00005_00002,Kiểm Thử Chương Trình,Kiểm tra chương trình chạy,NV_00004,16/10/2025,13/12/2025,,Medium,In Progress

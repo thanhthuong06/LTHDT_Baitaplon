@@ -29,9 +29,7 @@ class StaffManager:
         self.task_manager = None
     def set_task_manager(self, task_manager):
         self.task_manager = task_manager
-    # ==================================================
     # FILE
-    # ==================================================
     def load_from_file(self):
         self.staff_list = []
 
@@ -79,9 +77,7 @@ class StaffManager:
                     "task_list": ";".join(s.task_list),
                 })
 
-    # ==================================================
     # CRUD
-    # ==================================================
     def add_staff(self):
         staff = Staff()
         staff.input_info(self.staff_list)
@@ -147,9 +143,7 @@ class StaffManager:
         self.save_to_file()
         print(f"Đã xóa nhân viên {staff_id} thành công.")
 
-    # ==================================================
     # DISPLAY
-    # ==================================================
     def display_all(self):
         if not self.staff_list:
             print("Danh sách nhân viên trống")
@@ -162,9 +156,7 @@ class StaffManager:
         for s in self.staff_list:
             s.display_info()
             
-    # ==================================================
     # SEARCH 
-    # ==================================================
     def search_staff(self):
         while True:
             print("\n--- TÌM KIẾM NHÂN VIÊN ---")
@@ -250,9 +242,7 @@ class StaffManager:
 
             return
 
-    # ==================================================
     # NGHIỆP VỤ LIÊN KẾT
-    # ==================================================
     def find_by_id(self, staff_id):
         return next(
             (s for s in self.staff_list if s.staff_id == staff_id),
@@ -262,7 +252,7 @@ class StaffManager:
     def remove_task_from_all_staff(self, task_id):
         """
         Khi task bị xóa hoặc hủy
-        → gỡ task khỏi toàn bộ nhân viên
+        gỡ task khỏi toàn bộ nhân viên
         """
         changed = False
 

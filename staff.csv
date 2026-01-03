@@ -1,3 +1,9 @@
 staff_id,full_name,age,level,role,management_title,task_list
-NV_00002,Ninh Thị C,24,Junior,Tester,Project Manager,TP25_00001_00002
 NV_00001,Phương Linh,19,Intern,Quality Assurance,Project Manager,
+NV_00002,Thu Phương,24,Intern,Developer,Team Leader,TP25_00001_00001;TP25_00003_00001
+NV_00003,Ngọc Phượng,20,Junior,Business Analyst,,TP25_00001_00002
+NV_00004,Khánh Thảo,22,Senior,Developer,,TP25_00005_00002
+NV_00005,Minh Nguyệt,25,Junior,Tester,Project Manager,
+NV_00006,Nguyễn Thương,28,Intern,Business Analyst,,TP25_00005_00001
+NV_00007,Nguyễn Huệ,24,Intern,Quality Assurance,,
+NV_00008,Thu Thủy,25,Senior,Tester,,
